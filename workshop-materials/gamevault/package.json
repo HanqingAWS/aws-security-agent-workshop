@@ -1,0 +1,23 @@
+{
+  "name": "gamevault",
+  "version": "1.0.0",
+  "description": "GameVault — intentionally vulnerable mobile-game backend demo for the AWS Security Agent (Continuum) workshop. DO NOT use in production.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "initdb": "node db/init.js",
+    "smoke": "node test/smoke.js",
+    "check": "node --check src/server.js && node --check db/init.js && node --check test/smoke.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": ["workshop", "security", "demo", "vulnerable", "game-backend", "aws-security-agent"],
+  "license": "MIT-0",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.12.0"
+  }
+}

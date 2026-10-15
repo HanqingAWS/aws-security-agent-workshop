@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GameVault (Vulnerable Demo)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; }
+    h1 { color: #6a4cff; }
+    code { background:#f2f2f7; padding:1px 5px; border-radius:4px; }
+    .warn { background:#fff3cd; border:1px solid #ffe69c; padding:12px; border-radius:8px; }
+    li { margin:4px 0; }
+  </style>
+</head>
+<body>
+  <h1>🎮 GameVault API</h1>
+  <p class="warn">⚠️ 这是一个<strong>故意包含安全漏洞</strong>的教学演示手游后端,仅用于 AWS Security Agent (Continuum) Workshop。请勿用于生产,且仅对你拥有授权的目标做测试。</p>
+  <h3>可用接口</h3>
+  <ul>
+    <li><code>POST /login</code> — 登录(username, password)</li>
+    <li><code>GET /leaderboard/search?q=</code> — 排行榜搜索(公开)</li>
+    <li><code>GET /players/:id</code> — 玩家资料(需登录)</li>
+    <li><code>POST /scores</code> — 提交分数(需登录)</li>
+    <li><code>POST /iap/confirm</code> — 确认内购发币(需登录)</li>
+    <li><code>GET /admin/players</code> — GM:列出所有玩家</li>
+    <li><code>POST /admin/players/:id/grant</code> — GM:发放金币</li>
+    <li><code>POST /admin/players/:id/ban</code> — GM:封禁玩家</li>
+  </ul>
+  <p>测试账号:<code>alice / password1</code>,管理员:<code>admin / admin123</code></p>
+</body>
+</html>

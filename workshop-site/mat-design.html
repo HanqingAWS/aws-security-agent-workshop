@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设计评审材料与结果 · AWS Security Agent Workshop</title>
+<style>
+:root{
+  --aws-nav:#232f3e; --aws-nav2:#1b2531; --aws-blue:#0972d3; --aws-blue-dark:#033160;
+  --aws-link:#0972d3; --bg:#ffffff; --bg-soft:#f8f9fa; --bg-code:#f1f3f5;
+  --text:#16191f; --text-sec:#414750; --text-mute:#687078; --border:#e4e7ea; --border-strong:#c6cbd1;
+  --ok:#037f51; --ok-bg:#f0faf5; --warn:#8a6116; --warn-bg:#fdf6e3; --err:#d13212; --err-bg:#fdf3f1;
+  --info:#0972d3; --info-bg:#f0f7ff; --crit:#d13212; --high:#e07000; --med:#8a6116; --low:#5f6b7a;
+  --mono:'SF Mono','Monaco','Menlo',Consolas,monospace;
+  --sans:'Amazon Ember','Helvetica Neue','Segoe UI',Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+  --radius:8px; --shadow:0 1px 4px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:var(--sans);color:var(--text);background:var(--bg);line-height:1.6;}
+code{font-family:var(--mono);background:var(--bg-code);padding:1px 6px;border-radius:4px;font-size:.88em;}
+pre{font-family:var(--mono);background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.5;color:var(--text-sec);}
+a{color:var(--aws-link);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:50;background:var(--aws-nav);color:#fff;height:56px;display:flex;
+  align-items:center;padding:0 22px;gap:14px;box-shadow:0 1px 6px rgba(0,0,0,.25);}
+.topbar .logo{font-weight:700;font-size:15px;letter-spacing:.3px;display:flex;align-items:center;gap:9px;}
+.topbar .logo .mark{background:#ff9900;color:#232f3e;border-radius:4px;padding:2px 7px;font-size:12px;font-weight:800;}
+.topbar .sep{opacity:.4;}
+.topbar .ttl{font-size:14px;font-weight:500;opacity:.95;}
+.topbar .right{margin-left:auto;font-size:13px;opacity:.85;display:flex;gap:18px;align-items:center;}
+
+.layout{display:flex;align-items:flex-start;}
+/* sidebar */
+.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);width:300px;flex:0 0 300px;overflow-y:auto;
+  border-right:1px solid var(--border);background:var(--bg-soft);padding:22px 0;}
+.sidebar h2{font-size:15px;margin:0 20px 14px;color:var(--text);line-height:1.4;}
+.sidebar .wtag{display:inline-block;font-size:11px;color:var(--aws-blue);background:var(--info-bg);
+  border:1px solid var(--info-bg);border-radius:20px;padding:2px 10px;margin:0 20px 16px;}
+.nav a{display:block;padding:7px 20px 7px 20px;font-size:13.5px;color:var(--text-sec);border-left:3px solid transparent;}
+.nav a:hover{background:var(--bg-hover,#eef1f4);text-decoration:none;}
+.nav a.sub{padding-left:34px;font-size:13px;color:var(--text-mute);}
+.nav a.active{color:var(--aws-blue);border-left-color:var(--aws-blue);background:#fff;font-weight:600;}
+.nav .group{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-mute);
+  margin:16px 20px 6px;font-weight:700;}
+
+/* content */
+.content{flex:1 1 auto;min-width:0;max-width:960px;margin:0 auto;padding:34px 48px 120px;}
+.breadcrumb{font-size:12.5px;color:var(--text-mute);margin-bottom:14px;}
+.breadcrumb a{color:var(--text-mute);}
+section{scroll-margin-top:72px;margin-bottom:14px;padding-bottom:26px;border-bottom:1px solid var(--border);}
+section:last-child{border-bottom:none;}
+h1{font-size:30px;margin:.2em 0 .5em;font-weight:700;line-height:1.25;}
+h2.sec{font-size:23px;margin:1.4em 0 .5em;padding-bottom:8px;border-bottom:2px solid var(--border);font-weight:700;}
+h3{font-size:17px;margin:1.5em 0 .4em;font-weight:650;}
+h4{font-size:14px;margin:1.2em 0 .3em;color:var(--text-sec);text-transform:uppercase;letter-spacing:.04em;}
+p{margin:.5em 0;}
+ul,ol{margin:.5em 0;padding-left:22px;}
+li{margin:4px 0;}
+
+/* callouts */
+.box{border-radius:var(--radius);padding:13px 16px 13px 15px;margin:14px 0;font-size:14px;border:1px solid;
+  border-left-width:4px;}
+.box.info{background:var(--info-bg);border-color:#b6d9fb;border-left-color:var(--info);}
+.box.warn{background:var(--warn-bg);border-color:#f3e2b3;border-left-color:#e0a800;}
+.box.ok{background:var(--ok-bg);border-color:#bfe8d4;border-left-color:var(--ok);}
+.box.tip{background:#f5f0fb;border-color:#dcc8f3;border-left-color:#8b5cf6;}
+.box .bt{font-weight:700;margin-right:6px;}
+
+/* tables */
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;}
+thead th{background:var(--bg-soft);text-align:left;padding:10px 14px;font-weight:650;color:var(--text);
+  border-bottom:1px solid var(--border-strong);font-size:13px;}
+td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text-sec);vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--bg-soft);}
+
+/* flow diagram */
+.flow{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;
+  margin:14px 0;font-family:var(--mono);font-size:13px;color:var(--text-sec);white-space:pre;overflow-x:auto;line-height:1.7;}
+
+/* step list */
+.steps{counter-reset:step;list-style:none;padding-left:0;margin:16px 0;}
+.steps>li{counter-increment:step;position:relative;padding:0 0 16px 46px;margin:0;}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:-2px;width:30px;height:30px;border-radius:50%;
+  background:var(--aws-blue);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);}
+.steps>li::after{content:"";position:absolute;left:14px;top:30px;bottom:0;width:2px;background:var(--border);}
+.steps>li:last-child::after{display:none;}
+.steps .sh{font-weight:650;color:var(--text);display:block;margin-bottom:2px;}
+
+/* meta chips for modules */
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px;}
+.chip{font-size:12px;padding:3px 11px;border-radius:20px;background:var(--bg-soft);border:1px solid var(--border);
+  color:var(--text-sec);display:inline-flex;align-items:center;gap:5px;}
+.chip b{color:var(--text);font-weight:600;}
+.chip.role{background:var(--info-bg);border-color:#b6d9fb;color:var(--aws-blue-dark);}
+.chip.time{background:#fff6e9;border-color:#f3e2b3;color:var(--warn);}
+
+/* feature sub-block labels */
+.flabel{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:.03em;
+  color:var(--aws-blue);text-transform:uppercase;margin:22px 0 4px;}
+.flabel .n{background:var(--aws-blue);color:#fff;border-radius:5px;width:20px;height:20px;display:inline-flex;
+  align-items:center;justify-content:center;font-size:11px;}
+
+/* simulated result screen */
+.screen{border:1px solid var(--border-strong);border-radius:10px;overflow:hidden;margin:12px 0 6px;box-shadow:var(--shadow);}
+.screen .bar{background:#f4f6f8;border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:8px;
+  font-size:12px;color:var(--text-mute);}
+.screen .dot{width:10px;height:10px;border-radius:50%;}
+.screen .dot.r{background:#ff5f57;}.screen .dot.y{background:#febc2e;}.screen .dot.g{background:#28c840;}
+.screen .bar .url{margin-left:10px;font-family:var(--mono);background:#fff;border:1px solid var(--border);
+  border-radius:5px;padding:2px 10px;font-size:11px;flex:1;color:var(--text-sec);}
+.screen .body{padding:16px 18px;background:#fff;}
+.screencap{font-size:12px;color:var(--text-mute);margin:2px 0 18px;font-style:italic;}
+
+/* findings list (mock) */
+.finding{border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:10px 0;background:#fff;}
+.finding .top{display:flex;align-items:center;gap:10px;margin-bottom:5px;flex-wrap:wrap;}
+.sev{font-size:11px;font-weight:700;padding:2px 9px;border-radius:4px;color:#fff;letter-spacing:.03em;}
+.sev.crit{background:var(--crit);}.sev.high{background:var(--high);}.sev.med{background:var(--med);}.sev.low{background:var(--low);}
+.finding .fid{font-family:var(--mono);font-size:12px;color:var(--text-mute);}
+.finding .fname{font-weight:650;font-size:14px;}
+.finding .fdesc{font-size:13px;color:var(--text-sec);margin:4px 0 0;}
+.finding .fmeta{font-size:12px;color:var(--text-mute);margin-top:6px;font-family:var(--mono);}
+.sevcount{display:flex;gap:14px;margin:4px 0 10px;flex-wrap:wrap;}
+.sevcount .sc{font-size:12.5px;color:var(--text-sec);display:flex;align-items:center;gap:6px;}
+.sevcount .pill{width:10px;height:10px;border-radius:50%;}
+
+/* attack chain */
+.chain{list-style:none;padding-left:0;margin:8px 0;counter-reset:ch;}
+.chain li{counter-increment:ch;position:relative;padding:4px 0 10px 30px;font-size:13px;color:var(--text-sec);}
+.chain li::before{content:counter(ch);position:absolute;left:0;top:2px;width:20px;height:20px;border-radius:50%;
+  background:var(--err-bg);color:var(--err);border:1px solid #f3c6ba;font-size:11px;font-weight:700;display:flex;
+  align-items:center;justify-content:center;}
+
+/* overview agenda */
+.agenda td .m{font-weight:650;color:var(--text);}
+.obj{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+.obj .o{background:var(--bg-soft);border:1px solid var(--border);border-left:4px solid var(--aws-blue);
+  border-radius:var(--radius);padding:12px 14px;font-size:13.5px;}
+.obj .o b{display:block;color:var(--text);margin-bottom:2px;}
+.trace td{font-size:13px;}
+.trace .y{color:var(--ok);font-weight:700;}
+.capbtn{display:inline-block;font-size:12px;color:var(--text-mute);border:1px dashed var(--border-strong);
+  border-radius:6px;padding:3px 10px;margin-top:4px;background:var(--bg-soft);}
+@media(max-width:900px){.sidebar{display:none;}.content{padding:24px 18px 80px;}.obj{grid-template-columns:1fr;}}
+.hero-sub{color:var(--text-sec);font-size:15px;margin-top:-4px;}
+.pos{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);padding:12px 15px;margin:8px 0;font-size:13.5px;}
+.pos b{color:var(--aws-blue-dark);}
+.kgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0;}
+.kcard{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;}
+.kcard .h{font-weight:650;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:7px;}
+.kcard .s{font-size:12.5px;color:var(--text-mute);}
+@media(max-width:700px){.kgrid{grid-template-columns:1fr;}}
+
+.pnbar{display:flex;justify-content:space-between;gap:14px;margin-top:40px;padding-top:22px;border-top:1px solid var(--border);}
+.pn{font-size:13.5px;padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-soft);color:var(--aws-blue);max-width:46%;}
+.pn:hover{text-decoration:none;background:#eef4fb;border-color:#b6d9fb;}
+.pn.next{text-align:right;margin-left:auto;}
+.matbody h1{font-size:28px;}
+.matbody hr{margin:34px 0;border:none;border-top:1px solid var(--border);}
+section{border-bottom:none;}
+
+/* Responsive navigation and wide workshop tables. */
+.mobile-nav{display:none;}
+@media(max-width:900px){
+  .topbar{height:auto;min-height:56px;flex-wrap:wrap;padding:10px 16px;gap:8px;}
+  .topbar .ttl{flex:1;min-width:0;overflow-wrap:anywhere;}
+  .topbar .sep,.topbar .right{display:none;}
+  .mobile-nav{display:block;background:var(--bg-soft);border-bottom:1px solid var(--border);padding:10px 18px;}
+  .mobile-nav summary{cursor:pointer;font-weight:600;}
+  .mobile-nav .nav{padding-top:8px;}
+  table{display:block;max-width:100%;overflow-x:auto;}
+  p,li,.box,.pn,.screen .bar .url{overflow-wrap:anywhere;}
+  .content{width:100%;} .screen .bar .url{min-width:0;}
+}
+</style></head>
+<body>
+<div class="topbar"><span class="logo"><span class="mark">aws</span> security workshop</span><span class="sep">|</span><span class="ttl">AWS Security Agent (Continuum) 动手 Workshop</span><span class="right"><span>中文 (简体)</span><span>Workshop 用户</span></span></div><details class="mobile-nav"><summary>目录</summary><nav class="nav" aria-label="章节目录">
+<div class="group">开始之前</div>
+<a href="index.html" class="">0 · 议程总览与学习目标</a>
+<a href="intro.html" class="">1 · 服务简介</a>
+<a href="app.html" class="">2 · 示例应用 GameVault</a>
+<a href="prep.html" class="">3 · 环境准备（讲师）</a>
+<a href="caps.html" class="">4 · 核心能力速览</a>
+<div class="group">动手实验</div>
+<a href="m0.html" class="sub">Module 0 · 环境搭建</a>
+<a href="m1.html" class="sub">Module 1 · 设计评审</a>
+<a href="m2.html" class="sub">Module 2 · 威胁建模</a>
+<a href="m3.html" class="sub">Module 3 · 代码评审</a>
+<a href="m4.html" class="sub">Module 4 · 渗透测试</a>
+<a href="m5.html" class="sub">Module 5 · IDE 集成（可选）</a>
+<div class="group">参考材料</div>
+<a href="mat-design.html" class="sub active">设计评审材料与结果</a>
+<a href="mat-threat.html" class="sub">威胁建模材料与结果</a>
+<a href="mat-code.html" class="sub">代码评审材料与结果</a>
+<a href="mat-pentest.html" class="sub">渗透测试材料与结果</a>
+<div class="group">收尾</div>
+<a href="tips.html" class="">5 · 常见坑与讲师提示</a>
+<a href="wrap.html" class="">6 · 总结与后续</a>
+<a href="refs.html" class="">7 · 参考资料</a>
+</nav></details>
+<div class="layout"><aside class="sidebar"><h2>AWS Security Agent<br>(AWS Continuum) 动手 Workshop</h2><span class="wtag">进阶 · 动手实验 · 约 2.5–3 小时</span>
+<nav class="nav" id="nav">
+<div class="group">开始之前</div>
+<a href="index.html" class="">0 · 议程总览与学习目标</a>
+<a href="intro.html" class="">1 · 服务简介</a>
+<a href="app.html" class="">2 · 示例应用 GameVault</a>
+<a href="prep.html" class="">3 · 环境准备（讲师）</a>
+<a href="caps.html" class="">4 · 核心能力速览</a>
+<div class="group">动手实验</div>
+<a href="m0.html" class="sub">Module 0 · 环境搭建</a>
+<a href="m1.html" class="sub">Module 1 · 设计评审</a>
+<a href="m2.html" class="sub">Module 2 · 威胁建模</a>
+<a href="m3.html" class="sub">Module 3 · 代码评审</a>
+<a href="m4.html" class="sub">Module 4 · 渗透测试</a>
+<a href="m5.html" class="sub">Module 5 · IDE 集成（可选）</a>
+<div class="group">参考材料</div>
+<a href="mat-design.html" class="sub active">设计评审材料与结果</a>
+<a href="mat-threat.html" class="sub">威胁建模材料与结果</a>
+<a href="mat-code.html" class="sub">代码评审材料与结果</a>
+<a href="mat-pentest.html" class="sub">渗透测试材料与结果</a>
+<div class="group">收尾</div>
+<a href="tips.html" class="">5 · 常见坑与讲师提示</a>
+<a href="wrap.html" class="">6 · 总结与后续</a>
+<a href="refs.html" class="">7 · 参考资料</a>
+</nav></aside>
+<main class="content"><div class="breadcrumb"><a href="index.html">AWS Security Agent 动手 Workshop</a> › 设计评审材料与结果</div>
+<section class="matbody"><p><a href="../workshop-materials/01-demo-app-architecture.md" download>下载原始 Markdown 材料</a></p><h1>GameVault —— 架构设计文档(Design Review 输入)</h1>
+<blockquote>
+<p><strong>用途</strong>:作为 <strong>Module 1 设计评审</strong> 的输入文档上传。本文件<strong>故意包含若干安全缺陷</strong>,
+用于演示 AWS Security Agent 在&quot;写代码之前&quot;就能发现的架构级问题。
+客户也可用自己的真实架构设计文档替换本文件。</p>
+</blockquote>
+<blockquote>
+<p><strong>设计与实现边界</strong>:本文的移动客户端、注册流程、S3 资源托管是设计评审用假设,
+可运行的 <code>gamevault/</code> 只实现登录/API/本地静态页和 PostgreSQL,不包含注册、真实移动端、S3 或应用商店集成。
+S3 公开可写是文档中的故意反例,不是需要实际创建的实验资源。</p>
+</blockquote>
+<h2>1. 概述</h2>
+<p>GameVault 是一个最小化的休闲手游后端服务,提供玩家注册/登录、提交分数上排行榜、
+内购(IAP)发放游戏金币、玩家资料查询,以及一个供运营(GM)使用的管理接口。
+目标是在尽量简单的前提下演示一个完整的手游后端。</p>
+<ul>
+<li><strong>技术栈</strong>:Node.js 20 + Express,PostgreSQL 15,客户端为移动游戏 App</li>
+<li><strong>部署</strong>:单台 EC2(公网),静态资源托管在 S3</li>
+<li><strong>认证</strong>:自研 JWT,登录后客户端保存 token</li>
+</ul>
+<h2>2. 组件与数据流</h2>
+<pre><code>[游戏客户端 App] --HTTPS--&gt; [Express API @ EC2:3000] --TCP--&gt; [PostgreSQL @ 同 VPC]
+      |                                   |
+      |                                   +--&gt; [S3: 资源包 + 静态内容]
+      +-- 保存 JWT 于本地存储
+</code></pre>
+<p>主要数据流:</p>
+<ol>
+<li>注册 → 密码经哈希后写入 <code>players</code> 表。</li>
+<li>登录 → 校验密码 → 签发 JWT → 客户端保存。</li>
+<li>对局结束 → <strong>客户端计算分数</strong>后提交 → 写入 <code>scores</code> 表并进排行榜。</li>
+<li>内购 → 客户端在应用商店完成支付后,<strong>上报&quot;已购买 + 到账金币数&quot;</strong> → 后端加币。</li>
+<li>玩家资料 → 按玩家 ID 返回资料(含金币、VIP 等级、邮箱)。</li>
+<li>运营(GM)接口 → 查看全部玩家、发放金币/道具、封禁玩家。</li>
+</ol>
+<h2>3. 认证与会话设计</h2>
+<ul>
+<li>登录成功后签发 JWT,<strong>密钥硬编码在代码常量中</strong>,便于部署。</li>
+<li>JWT 无过期时间,避免玩家频繁重新登录。</li>
+<li>客户端把 JWT 存入<strong>本地存储</strong>,方便各界面读取。</li>
+<li>密码使用 <strong>MD5</strong> 哈希后存储(团队认为足够快)。</li>
+</ul>
+<h2>4. 数据与接口设计</h2>
+<ul>
+<li>玩家资料、排行榜查询直接按客户端传入的参数拼接 SQL 查询以简化实现。</li>
+<li>玩家资料接口 <code>GET /players/:id</code> 按 ID 返回,<strong>不校验该 ID 是否为当前登录玩家</strong>(假设客户端只会传自己的 ID)。</li>
+<li>提交分数接口信任客户端提交的 <code>score</code>(<strong>分数在客户端计算</strong>),后端直接入库并进榜。</li>
+<li>内购确认接口 <code>POST /iap/confirm</code> 信任客户端上报的 <code>coins</code>,<strong>不向 Apple/Google 校验收据真伪</strong>。</li>
+<li>运营接口 <code>GET /admin/players</code>、<code>POST /admin/players/:id/grant</code>、<code>/ban</code> 通过&quot;客户端不显示入口&quot;来限制访问,<strong>后端不做额外鉴权</strong>。</li>
+</ul>
+<h2>5. 运维与可观测性</h2>
+<ul>
+<li>出错时直接把异常堆栈返回给调用方,便于客户端调试。</li>
+<li>暂无登录/发币/封号等关键操作的审计日志。</li>
+<li>登录、提交分数、内购接口暂无速率限制。</li>
+<li>存放资源包与静态内容的 S3 bucket 设为公开可读写,方便运营上传。</li>
+</ul>
+<h2>6. 合规背景</h2>
+<p>GameVault 处理玩家账户信息、充值(内购)与排行榜竞争数据。希望对照通用安全要求
+(如 OWASP、NIST CSF)评估当前设计,尤其关注<strong>作弊/刷分、白嫖内购、账号盗用、GM 越权</strong>等游戏行业高发风险。</p>
+<hr>
+<p><em>本文件为 Workshop 教学示例,其中的设计选择多为反面教材,请勿用于生产。</em></p>
+<hr><p><a href="../workshop-materials/02-design-review-sample-findings.md" download>下载原始 Markdown 材料</a></p><h1>示例结果 —— Design Review 发现(GameVault)</h1>
+<blockquote>
+<p><strong>这是什么</strong>:对 <code>01-demo-app-architecture.md</code> 运行 <strong>Design Review</strong> 后的<strong>示例输出</strong>,
+用于展示该能力产出的发现形态(违反的要求 / 影响 / 修复建议)。
+真实输出会随实际文档和启用的安全要求包而不同。</p>
+</blockquote>
+<p><strong>评审对象</strong>:GameVault 架构设计文档 v1
+<strong>对照要求包</strong>:OWASP ASVS(示意)、NIST CSF(示意)
+<strong>发现汇总</strong>:严重(Critical)3 · 高(High)3 · 中(Medium)2</p>
+<hr>
+<h3>DR-01 · Critical · 内购不做服务端收据校验(白嫖充值/刷币)</h3>
+<ul>
+<li><strong>违反要求</strong>:支付/发货等价值敏感操作必须在服务端完成权威校验。</li>
+<li><strong>影响</strong>:<code>POST /iap/confirm</code> 信任客户端上报的 <code>coins</code> 且不校验 Apple/Google 收据,攻击者可&quot;0 元&quot;获得任意金币,直接造成营收损失。</li>
+<li><strong>建议</strong>:服务端用官方 Server-to-Server 收据校验(App Store / Google Play),金币数量由后端依据已验证的商品映射决定,忽略客户端上报值;对收据做去重防重放。</li>
+</ul>
+<h3>DR-02 · Critical · 提交分数信任客户端(外挂刷榜)</h3>
+<ul>
+<li><strong>违反要求</strong>:影响排名/奖励的计算必须服务端可信化,或可被服务端验证。</li>
+<li><strong>影响</strong>:<code>POST /scores</code> 直接采信客户端分数,外挂可提交任意高分刷榜,破坏竞争公平与活动奖励发放。</li>
+<li><strong>建议</strong>:服务端重算或校验分数(关键帧/操作回放、合理性区间、速率/频次校验、服务端模拟);对异常分数标记审查。</li>
+</ul>
+<h3>DR-03 · Critical · JWT 密钥硬编码且 token 永不过期</h3>
+<ul>
+<li><strong>违反要求</strong>:签名密钥必须从安全来源(Secrets Manager / KMS)加载;会话令牌必须有有效期。</li>
+<li><strong>影响</strong>:密钥随代码泄露即可伪造任意玩家(含 GM/管理员)身份;token 永不过期意味着一次泄露长期有效。</li>
+<li><strong>建议</strong>:密钥移至 AWS Secrets Manager;设置较短 <code>exp</code> 并引入刷新令牌与吊销机制。</li>
+</ul>
+<h3>DR-04 · High · 玩家资料查询缺少对象级授权(IDOR)</h3>
+<ul>
+<li><strong>违反要求</strong>:每次访问资源都必须校验当前主体是否有权访问该对象。</li>
+<li><strong>影响</strong>:<code>GET /players/:id</code> 不校验归属,玩家可遍历 ID 读取他人资料(含邮箱等 PII)。</li>
+<li><strong>建议</strong>:服务端校验 <code>id == currentPlayer.id</code>(或基于好友/可见性策略);使用不可枚举 ID。</li>
+</ul>
+<h3>DR-05 · High · 运营(GM)接口无服务端鉴权</h3>
+<ul>
+<li><strong>违反要求</strong>:特权功能必须在服务端做基于角色的访问控制,不能依赖客户端隐藏入口。</li>
+<li><strong>影响</strong>:任何知道路径的人都可调用 <code>/admin/*</code>,给任意账号发币、封禁玩家(越权/提权)。</li>
+<li><strong>建议</strong>:对 <code>/admin/*</code> 增加服务端 <code>requireAuth + requireAdmin</code> 角色校验与审计。</li>
+</ul>
+<h3>DR-06 · High · 密码使用 MD5 哈希</h3>
+<ul>
+<li><strong>违反要求</strong>:口令必须使用加盐的、抗暴力破解的自适应哈希算法存储。</li>
+<li><strong>影响</strong>:MD5 速度快且无盐,一旦库泄露,攻击者可快速离线破解玩家口令并撞库。</li>
+<li><strong>建议</strong>:改用 <code>bcrypt</code> / <code>scrypt</code> / <code>argon2id</code>,每用户独立盐,设置合理 work factor。</li>
+</ul>
+<h3>DR-07 · Medium · JWT 存于客户端本地存储(易被窃取)</h3>
+<ul>
+<li><strong>违反要求</strong>:会话凭证应降低被本地/脚本读取的风险。</li>
+<li><strong>影响</strong>:设备被攻破或存在注入时,token 可被读取并长期冒用(叠加 DR-03 无过期更严重)。</li>
+<li><strong>建议</strong>:使用安全存储(Keychain/Keystore);缩短有效期并支持吊销。</li>
+</ul>
+<h3>DR-08 · Medium · 缺少速率限制与审计日志,且错误堆栈外泄 / S3 公开可写</h3>
+<ul>
+<li><strong>违反要求</strong>:关键操作需限流与审计;错误信息不得泄露内部细节;存储桶遵循最小权限。</li>
+<li><strong>影响</strong>:易遭撞库与刷接口(刷分/刷币);发币、封号等操作事后无法追溯(抵赖);堆栈泄露便于攻击者摸底;公开可写 S3 可被篡改/植入恶意资源包。</li>
+<li><strong>建议</strong>:对登录/提交分数/内购限流;记录关键操作审计日志;生产返回通用错误信息;S3 收紧为最小权限并关闭公共访问。</li>
+</ul>
+<hr>
+<p><em>示例性输出,仅用于说明 Design Review 的产出形态。</em></p>
+</section>
+<div class="pnbar"><a class="pn prev" href="m5.html">← Module 5 · IDE 集成（可选）</a><a class="pn next" href="mat-threat.html">威胁建模材料与结果 →</a></div></main></div></body></html>

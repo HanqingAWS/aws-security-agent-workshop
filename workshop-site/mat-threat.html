@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>威胁建模材料与结果 · AWS Security Agent Workshop</title>
+<style>
+:root{
+  --aws-nav:#232f3e; --aws-nav2:#1b2531; --aws-blue:#0972d3; --aws-blue-dark:#033160;
+  --aws-link:#0972d3; --bg:#ffffff; --bg-soft:#f8f9fa; --bg-code:#f1f3f5;
+  --text:#16191f; --text-sec:#414750; --text-mute:#687078; --border:#e4e7ea; --border-strong:#c6cbd1;
+  --ok:#037f51; --ok-bg:#f0faf5; --warn:#8a6116; --warn-bg:#fdf6e3; --err:#d13212; --err-bg:#fdf3f1;
+  --info:#0972d3; --info-bg:#f0f7ff; --crit:#d13212; --high:#e07000; --med:#8a6116; --low:#5f6b7a;
+  --mono:'SF Mono','Monaco','Menlo',Consolas,monospace;
+  --sans:'Amazon Ember','Helvetica Neue','Segoe UI',Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+  --radius:8px; --shadow:0 1px 4px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:var(--sans);color:var(--text);background:var(--bg);line-height:1.6;}
+code{font-family:var(--mono);background:var(--bg-code);padding:1px 6px;border-radius:4px;font-size:.88em;}
+pre{font-family:var(--mono);background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.5;color:var(--text-sec);}
+a{color:var(--aws-link);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:50;background:var(--aws-nav);color:#fff;height:56px;display:flex;
+  align-items:center;padding:0 22px;gap:14px;box-shadow:0 1px 6px rgba(0,0,0,.25);}
+.topbar .logo{font-weight:700;font-size:15px;letter-spacing:.3px;display:flex;align-items:center;gap:9px;}
+.topbar .logo .mark{background:#ff9900;color:#232f3e;border-radius:4px;padding:2px 7px;font-size:12px;font-weight:800;}
+.topbar .sep{opacity:.4;}
+.topbar .ttl{font-size:14px;font-weight:500;opacity:.95;}
+.topbar .right{margin-left:auto;font-size:13px;opacity:.85;display:flex;gap:18px;align-items:center;}
+
+.layout{display:flex;align-items:flex-start;}
+/* sidebar */
+.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);width:300px;flex:0 0 300px;overflow-y:auto;
+  border-right:1px solid var(--border);background:var(--bg-soft);padding:22px 0;}
+.sidebar h2{font-size:15px;margin:0 20px 14px;color:var(--text);line-height:1.4;}
+.sidebar .wtag{display:inline-block;font-size:11px;color:var(--aws-blue);background:var(--info-bg);
+  border:1px solid var(--info-bg);border-radius:20px;padding:2px 10px;margin:0 20px 16px;}
+.nav a{display:block;padding:7px 20px 7px 20px;font-size:13.5px;color:var(--text-sec);border-left:3px solid transparent;}
+.nav a:hover{background:var(--bg-hover,#eef1f4);text-decoration:none;}
+.nav a.sub{padding-left:34px;font-size:13px;color:var(--text-mute);}
+.nav a.active{color:var(--aws-blue);border-left-color:var(--aws-blue);background:#fff;font-weight:600;}
+.nav .group{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-mute);
+  margin:16px 20px 6px;font-weight:700;}
+
+/* content */
+.content{flex:1 1 auto;min-width:0;max-width:960px;margin:0 auto;padding:34px 48px 120px;}
+.breadcrumb{font-size:12.5px;color:var(--text-mute);margin-bottom:14px;}
+.breadcrumb a{color:var(--text-mute);}
+section{scroll-margin-top:72px;margin-bottom:14px;padding-bottom:26px;border-bottom:1px solid var(--border);}
+section:last-child{border-bottom:none;}
+h1{font-size:30px;margin:.2em 0 .5em;font-weight:700;line-height:1.25;}
+h2.sec{font-size:23px;margin:1.4em 0 .5em;padding-bottom:8px;border-bottom:2px solid var(--border);font-weight:700;}
+h3{font-size:17px;margin:1.5em 0 .4em;font-weight:650;}
+h4{font-size:14px;margin:1.2em 0 .3em;color:var(--text-sec);text-transform:uppercase;letter-spacing:.04em;}
+p{margin:.5em 0;}
+ul,ol{margin:.5em 0;padding-left:22px;}
+li{margin:4px 0;}
+
+/* callouts */
+.box{border-radius:var(--radius);padding:13px 16px 13px 15px;margin:14px 0;font-size:14px;border:1px solid;
+  border-left-width:4px;}
+.box.info{background:var(--info-bg);border-color:#b6d9fb;border-left-color:var(--info);}
+.box.warn{background:var(--warn-bg);border-color:#f3e2b3;border-left-color:#e0a800;}
+.box.ok{background:var(--ok-bg);border-color:#bfe8d4;border-left-color:var(--ok);}
+.box.tip{background:#f5f0fb;border-color:#dcc8f3;border-left-color:#8b5cf6;}
+.box .bt{font-weight:700;margin-right:6px;}
+
+/* tables */
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;}
+thead th{background:var(--bg-soft);text-align:left;padding:10px 14px;font-weight:650;color:var(--text);
+  border-bottom:1px solid var(--border-strong);font-size:13px;}
+td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text-sec);vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--bg-soft);}
+
+/* flow diagram */
+.flow{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;
+  margin:14px 0;font-family:var(--mono);font-size:13px;color:var(--text-sec);white-space:pre;overflow-x:auto;line-height:1.7;}
+
+/* step list */
+.steps{counter-reset:step;list-style:none;padding-left:0;margin:16px 0;}
+.steps>li{counter-increment:step;position:relative;padding:0 0 16px 46px;margin:0;}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:-2px;width:30px;height:30px;border-radius:50%;
+  background:var(--aws-blue);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);}
+.steps>li::after{content:"";position:absolute;left:14px;top:30px;bottom:0;width:2px;background:var(--border);}
+.steps>li:last-child::after{display:none;}
+.steps .sh{font-weight:650;color:var(--text);display:block;margin-bottom:2px;}
+
+/* meta chips for modules */
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px;}
+.chip{font-size:12px;padding:3px 11px;border-radius:20px;background:var(--bg-soft);border:1px solid var(--border);
+  color:var(--text-sec);display:inline-flex;align-items:center;gap:5px;}
+.chip b{color:var(--text);font-weight:600;}
+.chip.role{background:var(--info-bg);border-color:#b6d9fb;color:var(--aws-blue-dark);}
+.chip.time{background:#fff6e9;border-color:#f3e2b3;color:var(--warn);}
+
+/* feature sub-block labels */
+.flabel{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:.03em;
+  color:var(--aws-blue);text-transform:uppercase;margin:22px 0 4px;}
+.flabel .n{background:var(--aws-blue);color:#fff;border-radius:5px;width:20px;height:20px;display:inline-flex;
+  align-items:center;justify-content:center;font-size:11px;}
+
+/* simulated result screen */
+.screen{border:1px solid var(--border-strong);border-radius:10px;overflow:hidden;margin:12px 0 6px;box-shadow:var(--shadow);}
+.screen .bar{background:#f4f6f8;border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:8px;
+  font-size:12px;color:var(--text-mute);}
+.screen .dot{width:10px;height:10px;border-radius:50%;}
+.screen .dot.r{background:#ff5f57;}.screen .dot.y{background:#febc2e;}.screen .dot.g{background:#28c840;}
+.screen .bar .url{margin-left:10px;font-family:var(--mono);background:#fff;border:1px solid var(--border);
+  border-radius:5px;padding:2px 10px;font-size:11px;flex:1;color:var(--text-sec);}
+.screen .body{padding:16px 18px;background:#fff;}
+.screencap{font-size:12px;color:var(--text-mute);margin:2px 0 18px;font-style:italic;}
+
+/* findings list (mock) */
+.finding{border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:10px 0;background:#fff;}
+.finding .top{display:flex;align-items:center;gap:10px;margin-bottom:5px;flex-wrap:wrap;}
+.sev{font-size:11px;font-weight:700;padding:2px 9px;border-radius:4px;color:#fff;letter-spacing:.03em;}
+.sev.crit{background:var(--crit);}.sev.high{background:var(--high);}.sev.med{background:var(--med);}.sev.low{background:var(--low);}
+.finding .fid{font-family:var(--mono);font-size:12px;color:var(--text-mute);}
+.finding .fname{font-weight:650;font-size:14px;}
+.finding .fdesc{font-size:13px;color:var(--text-sec);margin:4px 0 0;}
+.finding .fmeta{font-size:12px;color:var(--text-mute);margin-top:6px;font-family:var(--mono);}
+.sevcount{display:flex;gap:14px;margin:4px 0 10px;flex-wrap:wrap;}
+.sevcount .sc{font-size:12.5px;color:var(--text-sec);display:flex;align-items:center;gap:6px;}
+.sevcount .pill{width:10px;height:10px;border-radius:50%;}
+
+/* attack chain */
+.chain{list-style:none;padding-left:0;margin:8px 0;counter-reset:ch;}
+.chain li{counter-increment:ch;position:relative;padding:4px 0 10px 30px;font-size:13px;color:var(--text-sec);}
+.chain li::before{content:counter(ch);position:absolute;left:0;top:2px;width:20px;height:20px;border-radius:50%;
+  background:var(--err-bg);color:var(--err);border:1px solid #f3c6ba;font-size:11px;font-weight:700;display:flex;
+  align-items:center;justify-content:center;}
+
+/* overview agenda */
+.agenda td .m{font-weight:650;color:var(--text);}
+.obj{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+.obj .o{background:var(--bg-soft);border:1px solid var(--border);border-left:4px solid var(--aws-blue);
+  border-radius:var(--radius);padding:12px 14px;font-size:13.5px;}
+.obj .o b{display:block;color:var(--text);margin-bottom:2px;}
+.trace td{font-size:13px;}
+.trace .y{color:var(--ok);font-weight:700;}
+.capbtn{display:inline-block;font-size:12px;color:var(--text-mute);border:1px dashed var(--border-strong);
+  border-radius:6px;padding:3px 10px;margin-top:4px;background:var(--bg-soft);}
+@media(max-width:900px){.sidebar{display:none;}.content{padding:24px 18px 80px;}.obj{grid-template-columns:1fr;}}
+.hero-sub{color:var(--text-sec);font-size:15px;margin-top:-4px;}
+.pos{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);padding:12px 15px;margin:8px 0;font-size:13.5px;}
+.pos b{color:var(--aws-blue-dark);}
+.kgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0;}
+.kcard{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;}
+.kcard .h{font-weight:650;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:7px;}
+.kcard .s{font-size:12.5px;color:var(--text-mute);}
+@media(max-width:700px){.kgrid{grid-template-columns:1fr;}}
+
+.pnbar{display:flex;justify-content:space-between;gap:14px;margin-top:40px;padding-top:22px;border-top:1px solid var(--border);}
+.pn{font-size:13.5px;padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-soft);color:var(--aws-blue);max-width:46%;}
+.pn:hover{text-decoration:none;background:#eef4fb;border-color:#b6d9fb;}
+.pn.next{text-align:right;margin-left:auto;}
+.matbody h1{font-size:28px;}
+.matbody hr{margin:34px 0;border:none;border-top:1px solid var(--border);}
+section{border-bottom:none;}
+
+/* Responsive navigation and wide workshop tables. */
+.mobile-nav{display:none;}
+@media(max-width:900px){
+  .topbar{height:auto;min-height:56px;flex-wrap:wrap;padding:10px 16px;gap:8px;}
+  .topbar .ttl{flex:1;min-width:0;overflow-wrap:anywhere;}
+  .topbar .sep,.topbar .right{display:none;}
+  .mobile-nav{display:block;background:var(--bg-soft);border-bottom:1px solid var(--border);padding:10px 18px;}
+  .mobile-nav summary{cursor:pointer;font-weight:600;}
+  .mobile-nav .nav{padding-top:8px;}
+  table{display:block;max-width:100%;overflow-x:auto;}
+  p,li,.box,.pn,.screen .bar .url{overflow-wrap:anywhere;}
+  .content{width:100%;} .screen .bar .url{min-width:0;}
+}
+</style></head>
+<body>
+<div class="topbar"><span class="logo"><span class="mark">aws</span> security workshop</span><span class="sep">|</span><span class="ttl">AWS Security Agent (Continuum) 动手 Workshop</span><span class="right"><span>中文 (简体)</span><span>Workshop 用户</span></span></div><details class="mobile-nav"><summary>目录</summary><nav class="nav" aria-label="章节目录">
+<div class="group">开始之前</div>
+<a href="index.html" class="">0 · 议程总览与学习目标</a>
+<a href="intro.html" class="">1 · 服务简介</a>
+<a href="app.html" class="">2 · 示例应用 GameVault</a>
+<a href="prep.html" class="">3 · 环境准备（讲师）</a>
+<a href="caps.html" class="">4 · 核心能力速览</a>
+<div class="group">动手实验</div>
+<a href="m0.html" class="sub">Module 0 · 环境搭建</a>
+<a href="m1.html" class="sub">Module 1 · 设计评审</a>
+<a href="m2.html" class="sub">Module 2 · 威胁建模</a>
+<a href="m3.html" class="sub">Module 3 · 代码评审</a>
+<a href="m4.html" class="sub">Module 4 · 渗透测试</a>
+<a href="m5.html" class="sub">Module 5 · IDE 集成（可选）</a>
+<div class="group">参考材料</div>
+<a href="mat-design.html" class="sub">设计评审材料与结果</a>
+<a href="mat-threat.html" class="sub active">威胁建模材料与结果</a>
+<a href="mat-code.html" class="sub">代码评审材料与结果</a>
+<a href="mat-pentest.html" class="sub">渗透测试材料与结果</a>
+<div class="group">收尾</div>
+<a href="tips.html" class="">5 · 常见坑与讲师提示</a>
+<a href="wrap.html" class="">6 · 总结与后续</a>
+<a href="refs.html" class="">7 · 参考资料</a>
+</nav></details>
+<div class="layout"><aside class="sidebar"><h2>AWS Security Agent<br>(AWS Continuum) 动手 Workshop</h2><span class="wtag">进阶 · 动手实验 · 约 2.5–3 小时</span>
+<nav class="nav" id="nav">
+<div class="group">开始之前</div>
+<a href="index.html" class="">0 · 议程总览与学习目标</a>
+<a href="intro.html" class="">1 · 服务简介</a>
+<a href="app.html" class="">2 · 示例应用 GameVault</a>
+<a href="prep.html" class="">3 · 环境准备（讲师）</a>
+<a href="caps.html" class="">4 · 核心能力速览</a>
+<div class="group">动手实验</div>
+<a href="m0.html" class="sub">Module 0 · 环境搭建</a>
+<a href="m1.html" class="sub">Module 1 · 设计评审</a>
+<a href="m2.html" class="sub">Module 2 · 威胁建模</a>
+<a href="m3.html" class="sub">Module 3 · 代码评审</a>
+<a href="m4.html" class="sub">Module 4 · 渗透测试</a>
+<a href="m5.html" class="sub">Module 5 · IDE 集成（可选）</a>
+<div class="group">参考材料</div>
+<a href="mat-design.html" class="sub">设计评审材料与结果</a>
+<a href="mat-threat.html" class="sub active">威胁建模材料与结果</a>
+<a href="mat-code.html" class="sub">代码评审材料与结果</a>
+<a href="mat-pentest.html" class="sub">渗透测试材料与结果</a>
+<div class="group">收尾</div>
+<a href="tips.html" class="">5 · 常见坑与讲师提示</a>
+<a href="wrap.html" class="">6 · 总结与后续</a>
+<a href="refs.html" class="">7 · 参考资料</a>
+</nav></aside>
+<main class="content"><div class="breadcrumb"><a href="index.html">AWS Security Agent 动手 Workshop</a> › 威胁建模材料与结果</div>
+<section class="matbody"><p><a href="../workshop-materials/03-threat-model-scope-doc.md" download>下载原始 Markdown 材料</a></p><h1>GameVault —— 内购与金币发放设计文档 / Scope Doc(Threat Modeling 输入)</h1>
+<blockquote>
+<p><strong>用途</strong>:作为 <strong>Module 2 威胁建模</strong> 的 <strong>scope doc</strong> 上传,把分析聚焦在&quot;内购发币 + 分数上榜&quot;这两个
+价值敏感特性上;可同时连接源码仓库作为上下文。客户也可换成自己的特性设计文档。</p>
+</blockquote>
+<h2>特性:内购发币(IAP)与分数上榜(Leaderboard)</h2>
+<h3>目标</h3>
+<p>让玩家完成内购后获得游戏金币,并把对局分数提交到全服排行榜。</p>
+<h3>参与者与信任边界</h3>
+<ul>
+<li><strong>匿名用户</strong>:仅能看公开排行榜。</li>
+<li><strong>已登录玩家</strong>:提交分数、确认内购、查看资料。</li>
+<li><strong>运营/GM</strong>:发放金币、封禁玩家、查看全部玩家。</li>
+<li><strong>信任边界</strong>:游戏客户端(不可信,可能被 root/越狱/注入外挂) ↔ Express API(可信) ↔ PostgreSQL(可信,同 VPC) ↔ S3 ↔ 应用商店支付(外部)。</li>
+</ul>
+<h3>关键流程</h3>
+<ol>
+<li>玩家在应用商店完成支付,客户端拿到收据(receipt)。</li>
+<li>客户端调用 <code>POST /iap/confirm</code>,body 含 <code>productId</code>、<code>coins</code>(声称到账数)、<code>receipt</code>。</li>
+<li>后端给该玩家加币并返回余额。</li>
+<li>对局结束,客户端调用 <code>POST /scores</code> 提交 <code>score</code>。</li>
+<li>任何人可 <code>GET /leaderboard/search?q=</code> 搜索排行榜。</li>
+<li>GM 通过 <code>/admin/*</code> 发币、封号、查看玩家。</li>
+</ol>
+<h3>关键数据</h3>
+<ul>
+<li>玩家凭证(口令哈希、JWT)</li>
+<li>金币余额、VIP 等级、充值记录</li>
+<li>排行榜分数(影响赛季奖励)</li>
+<li>玩家 PII(邮箱)</li>
+</ul>
+<h3>当前实现要点(供 agent 理解现状)</h3>
+<p>下面只描述可运行 API;S3/应用商店是设计上下文,原型没有真实连接。所有账户和支付数据均为虚构。</p>
+<ul>
+<li>JWT 密钥硬编码;token 无过期。</li>
+<li><code>iap/confirm</code> 不校验收据,信任客户端 <code>coins</code>。</li>
+<li><code>scores</code> 信任客户端 <code>score</code>。</li>
+<li><code>players/:id</code> 不校验归属。</li>
+<li><code>/admin/*</code> 无角色校验。</li>
+<li>登录/内购/提交分数无限流;无审计日志;错误堆栈直接返回。</li>
+</ul>
+<h3>希望评估的问题</h3>
+<ul>
+<li>攻击者能否不花钱获得金币、或刷榜获取赛季奖励?</li>
+<li>能否冒充他人/管理员、读取他人账号、或越权发币封号?</li>
+<li>哪些价值敏感环节缺少服务端校验与可追溯性?</li>
+</ul>
+<hr>
+<p><em>Workshop 教学示例文档。</em></p>
+<hr><p><a href="../workshop-materials/04-threat-model-sample-output.md" download>下载原始 Markdown 材料</a></p><h1>示例结果 —— Threat Model(GameVault 内购 + 排行榜)</h1>
+<blockquote>
+<p><strong>这是什么</strong>:对 <code>03-threat-model-scope-doc.md</code>(+ 源码上下文)运行 <strong>Threat Modeling</strong> 后的<strong>示例输出</strong>,
+展示该能力产出的&quot;系统概览 + STRIDE 威胁清单&quot;形态。真实输出因输入而异。</p>
+</blockquote>
+<h2>System Overview(系统概览,自动生成示意)</h2>
+<p>GameVault 内购与排行榜特性由游戏客户端、Express API 与 PostgreSQL 构成,并与外部应用商店支付交互。
+主要信任边界位于客户端与 API 之间,<strong>客户端被假定为不可信</strong>(可被 root/越狱/外挂注入)。
+内购到账金币数与对局分数均在<strong>客户端</strong>产生并被 API 直接信任;内购收据未经服务端校验。
+身份通过自研 JWT 维持,密钥硬编码且令牌无过期。玩家资料读取按 ID 进行,未做归属校验;
+运营接口没有挂鉴权中间件,与需要 JWT 的普通玩家接口不同;不存在可被证明绕过的 GM 角色校验。</p>
+<ul>
+<li><strong>信任边界</strong>:Client(不可信)→ API(可信);API → DB/S3(VPC 内);API ↔ App Store(外部)。</li>
+<li><strong>数据资产</strong>:口令哈希、JWT、金币/充值、排行榜分数、玩家 PII。</li>
+<li><strong>严重度分布</strong>:Critical 3 · High 2 · Medium 2。</li>
+</ul>
+<h2>Threats(STRIDE 分类)</h2>
+<h3>TM-01 · Tampering · Critical —— 内购金币由客户端上报且收据不校验</h3>
+<ul>
+<li><strong>陈述</strong>:攻击者构造或重放 <code>POST /iap/confirm</code>,在未真实支付下获得任意金币(白嫖/刷币)。</li>
+<li><strong>STRIDE</strong>:Tampering(+ Repudiation)</li>
+<li><strong>建议</strong>:服务端做官方 S2S 收据校验;金币由后端商品映射决定;收据去重防重放;发币写审计。</li>
+</ul>
+<h3>TM-02 · Tampering · Critical —— 对局分数由客户端提交</h3>
+<ul>
+<li><strong>陈述</strong>:外挂提交任意高分刷榜,攫取赛季/活动奖励,破坏公平。</li>
+<li><strong>STRIDE</strong>:Tampering</li>
+<li><strong>建议</strong>:服务端校验/重算分数(合理区间、频次、操作回放、服务端模拟);异常分数进审查队列。</li>
+</ul>
+<h3>TM-03 · Spoofing · Critical —— JWT 密钥硬编码 + 令牌无过期</h3>
+<ul>
+<li><strong>陈述</strong>:攻击者获取/爆破硬编码弱密钥后可伪造任意玩家(含 GM)的 JWT,冒充其身份。</li>
+<li><strong>STRIDE</strong>:Spoofing</li>
+<li><strong>建议</strong>:密钥入 Secrets Manager;设置 <code>exp</code> 与刷新/吊销;轮换密钥。</li>
+</ul>
+<h3>TM-04 · Elevation of Privilege · High —— 运营(GM)接口无角色校验</h3>
+<ul>
+<li><strong>陈述</strong>:任何已登录(甚至未登录)用户直接调用 <code>/admin/*</code> 即可发币、封号,获得运营权限。</li>
+<li><strong>STRIDE</strong>:Elevation of Privilege</li>
+<li><strong>建议</strong>:服务端 RBAC;默认拒绝;对特权操作审计。</li>
+</ul>
+<h3>TM-05 · Information Disclosure · High —— 玩家资料越权(IDOR)+ SQL 注入</h3>
+<ul>
+<li><strong>陈述</strong>:<code>GET /players/:id</code> 不校验归属,可遍历读取他人资料与邮箱;查询用字符串拼接,可注入拖库。</li>
+<li><strong>STRIDE</strong>:Information Disclosure(+ Tampering)</li>
+<li><strong>建议</strong>:对象级授权;参数化查询 / ORM;最小权限 DB 账户;不可枚举 ID。</li>
+</ul>
+<h3>TM-06 · Denial of Service · Medium —— 登录/内购/提交分数无速率限制</h3>
+<ul>
+<li><strong>陈述</strong>:无限流使撞库、刷分、刷接口成为可能,影响可用性与数据质量。</li>
+<li><strong>STRIDE</strong>:Denial of Service</li>
+<li><strong>建议</strong>:接口限流、账户锁定/退避、WAF。</li>
+</ul>
+<h3>TM-07 · Repudiation · Medium —— 缺少审计日志</h3>
+<ul>
+<li><strong>陈述</strong>:登录、发币、封号、内购等关键操作无日志,事后无法追溯或举证(尤其客服纠纷/风控)。</li>
+<li><strong>STRIDE</strong>:Repudiation</li>
+<li><strong>建议</strong>:记录带主体与时间戳的审计日志,集中存储、防篡改。</li>
+</ul>
+<hr>
+<p><em>示例性输出,仅用于说明 Threat Modeling 的产出形态。</em></p>
+</section>
+<div class="pnbar"><a class="pn prev" href="mat-design.html">← 设计评审材料与结果</a><a class="pn next" href="mat-code.html">代码评审材料与结果 →</a></div></main></div></body></html>

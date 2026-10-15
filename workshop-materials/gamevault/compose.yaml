@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: gamevault
+      POSTGRES_USER: gamevault
+      POSTGRES_PASSWORD: gamevault
+    volumes:
+      - demo-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gamevault -d gamevault"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  app:
+    build: .
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://gamevault:gamevault@db:5432/gamevault
+      JWT_SECRET: ""
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  demo-db:
